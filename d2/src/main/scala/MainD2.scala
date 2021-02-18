@@ -1,6 +1,9 @@
 import scala.annotation.tailrec
 
 /**
+  V1:
+  =======
+
   For example, suppose you have the following list:
 
   1-3 a: abcde
@@ -18,11 +21,23 @@ import scala.annotation.tailrec
   both within the limits of their respective policies.
 
   How many passwords are valid according to their policies?
+
+  =======
+
+  V2:
+  =======
+
+  Given the same example list from above:
+
+  1-3 a: abcde is valid: position 1 contains a and position 3 does not.
+  1-3 b: cdefg is invalid: neither position 1 nor position 3 contains b.
+  2-9 c: ccccccccc is invalid: both position 2 and position 9 contain c.
+
+  How many passwords are valid according to the new interpretation of the policies?
  */
 
 @main def entrypoint = 
   val input = FileLoader.readFile("input.txt")
-  //println(solve(List("1-3 a: abcde", "1-3 b: cdefg", "2-9 c: ccccccccc")))
   println(solve(input))
 
 @tailrec
@@ -37,7 +52,7 @@ def solve(passwords: List[String], amount: Int = 0): Int = passwords match
 
 def applyRule(rule: String): String => Boolean =
   rule.split(" ").toList match 
-    case range :: letter :: Nil => (input: String) => isValidV1(range, input.trim, letter(0))
+    case range :: letter :: Nil => (input: String) => isValidV2(range, input.trim, letter(0))
     case _ => (input: String) => false
     
 def isValidV1(range: String, input: String, letter: Char): Boolean = 
@@ -49,6 +64,6 @@ def isValidV1(range: String, input: String, letter: Char): Boolean =
 
 def isValidV2(range: String, input: String, letter: Char): Boolean = 
   range.split("-").toList.map(_.toInt - 1) match 
-    case from :: to :: Nil => input(from) == letter && input(to) != letter 
+    case from :: to :: Nil => (input(from) == letter) ^ (input(to) == letter)
     case _ => false
   
