@@ -38,4 +38,5 @@ lazy val d2 = project
 addCommandAlias("cd", "project")
 addCommandAlias("ls", "projects")
 addCommandAlias("c", "compile")
-addCommandAlias("r", "reload")
+addCommandAlias("rel", "reload")
+addCommandAlias("r", "run")
