@@ -31,8 +31,8 @@ def solve(passwords: List[String], amount: Int = 0): Int = passwords match
   case elem :: rem => elem.split(":").toList match
     case rule :: passwd :: Nil => 
       if applyRule(rule)(passwd) 
-      then solve(passwords.tail, amount + 1) 
-      else solve(passwords.tail, amount)
+      then solve(rem, amount + 1) 
+      else solve(rem, amount)
     case _ => amount
 
 def applyRule(rule: String): String => Boolean =
