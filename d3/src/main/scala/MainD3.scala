@@ -15,18 +15,18 @@ import scala.util.chaining._
 
 case class Shift(val right: Int, val down: Int)
 
-def solve(input: List[String], skip: Int = 1): Int = 
+def solve(input: List[String], skip: Int = 1): BigDecimal = 
   List(Shift(1, 1), Shift(3, 1), Shift(5, 1), Shift(7, 1), Shift(1, 2))
     .map(shift => shiftDownSlope(input, shift))
     .tap(res => println(s"result: $res"))
-    .foldLeft(1)(_ * _)
+    .foldLeft(BigDecimal.valueOf(1L))(_ * _)
 
-def shiftDownSlope(input: List[String], shift: Shift) =
+def shiftDownSlope(input: List[String], shift: Shift): BigDecimal =
   val rows = inputToRows(input, shift)
   go(rows(shift.down), rows.drop(shift.down).tail, shift.right, shift.right, 0)
 
 def inputToRows(input: List[String], shift: Shift): List[Array[Char]] = 
-  if shift.down != 1 then input
+  if shift.down > 1 then input
     .map(_.toCharArray)
     .zipWithIndex
     .filter((row, index) => index > 0 && index % shift.down == 0)
@@ -34,16 +34,15 @@ def inputToRows(input: List[String], shift: Shift): List[Array[Char]] =
   else input.map(_.toCharArray)
   
 @tailrec
-def go(currentRow: Array[Char], rem: List[Array[Char]], column: Int, shift: Int, trees: Int): Int = rem match
-  case Nil => 
-    if isTree(currentRow, column) then trees + 1 else trees
-  case head :: tail if isTree(currentRow, column) => 
-    go(head, tail, shiftRight(column, currentRow.size, shift), shift, trees + 1)
-  case _ => 
-    go(rem.head, rem.tail, shiftRight(column, currentRow.size, shift), shift, trees)
+def go(currentRow: Array[Char], rem: List[Array[Char]], column: Int, shift: Int, trees: BigDecimal): BigDecimal = 
+  rem match
+    case Nil => 
+      if isTree(currentRow, column) then trees + 1 else trees
+    case head :: tail if isTree(currentRow, column) => 
+      go(head, tail, shiftRight(column, currentRow.size, shift), shift, trees + 1)
+    case _ => 
+      go(rem.head, rem.tail, shiftRight(column, currentRow.size, shift), shift, trees)
 
-def shiftRight(column: Int, rowLength: Int, shift: Int): Int = 
-  if column + shift >= rowLength then  (column + shift) - rowLength
-  else column + shift
+def shiftRight(column: Int, rowLength: Int, shift: Int): Int = (column + shift) % rowLength
 
 def isTree(currentRow: Array[Char], column: Int): Boolean = currentRow(column) == '#'
