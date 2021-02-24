@@ -1,4 +1,5 @@
 import scala.util.chaining._
+import scala.annotation.tailrec
 
 @main def entrypoint = 
   println(solve(FileLoader.readFile("input.txt")))
@@ -6,8 +7,12 @@ import scala.util.chaining._
 val mandatoryFields = Set("byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid")
 
 def solve(input: List[String]): Int = 
-  splitInputToRawPassports(input).map(parsePassportElements).count(validatePassportClaims)
+  splitInputToRawPassports(input)
+    .map(parsePassportElements)
+    // .tap(claims => claims.foreach(claim => println(s"${claim mkString " "} :: ${passportClaimsAreValid(claim)}")))
+    .count(passportClaimsAreValid)
   
+@tailrec
 def splitInputToRawPassports(rows: List[String], passports: List[String] = List.empty): List[String] = 
     if rows.isEmpty then passports.toList
     else 
@@ -23,6 +28,8 @@ def parsePassportElements(rawPassport: String): List[PassportClaim] =
       case _ => None
     }
 
-def validatePassportClaims(claims: List[PassportClaim]): Boolean = 
-  claims.forall(claim => claim.name == "cid" || mandatoryFields.contains(claim.name))
-  .tap(res => println(s"${claims.map(_.name) mkString " "} :: res: $res"))
+def passportClaimsAreValid(claims: List[PassportClaim]): Boolean = 
+  mandatoryFields.diff(claims.map(_.name).toSet).toList match 
+    case Nil => true
+    case "cit" :: Nil => true
+    case _ => false
