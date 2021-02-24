@@ -4,6 +4,8 @@ import scala.annotation.tailrec
 @main def entrypoint = 
   println(solve(FileLoader.readFile("input.txt")))
 
+case class PassportClaim(val name: String, val value: String)
+
 val mandatoryFields = Set("byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid")
 val eyeColors = Set("amb", "blu", "brn", "gry", "grn", "hzl", "oth")
 
@@ -14,10 +16,8 @@ def solve(input: List[String]): Int =
 def splitInputToRawPassports(rows: List[String], passports: List[String] = List.empty): List[String] = 
     if rows.isEmpty then passports.toList
     else 
-      val current = rows.takeWhile(l => l.nonEmpty) 
+      val current = rows.takeWhile(_.nonEmpty) 
       splitInputToRawPassports(rows.drop(current.size + 1), passports :+ (current mkString " "))
-
-case class PassportClaim(val name: String, val value: String)
 
 def parsePassportElements(rawPassport: String): List[PassportClaim] =
   rawPassport.split(" ").toList.flatMap { claimValue => 
@@ -46,7 +46,7 @@ def validateHeight(height: String): Boolean =
       case _ => false
 
 def validateColor(color: String): Boolean =
-    color.length == 7 && color.matches("^#-?[0-9a-fA-F]+")
+  color.length == 7 && color.matches("^#-?[0-9a-fA-F]+")
 
 def passportClaimIsValid(claim: PassportClaim): Boolean = 
   claim match 
