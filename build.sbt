@@ -9,7 +9,7 @@ inThisBuild(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(shared, d1, d2, d3, d4, d5)
+  .aggregate(shared, d1, d2, d3, d4, d5, d6)
   .settings(
     name := "Advent of Code 2020"
   )
@@ -53,6 +53,13 @@ lazy val d5 = project
   .dependsOn(shared)
   .settings(
     name := "Day 5"
+  )
+
+lazy val d6 = project
+  .in(file("d6"))
+  .dependsOn(shared)
+  .settings(
+    name := "Day 6"
   )
 
 addCommandAlias("cd", "project")

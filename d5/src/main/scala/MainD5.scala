@@ -1,4 +1,3 @@
-import scala.util.chaining._
 import scala.annotation.tailrec
 
 @main def entrypoint = 
@@ -16,9 +15,9 @@ def solve(input: List[String]) =
 
 @tailrec
 def split(current: List[Char], lo: Int, hi: Int): Int = current match
-    case last :: Nil => last match
-      case 'F' | 'L' => lo
-      case 'B' | 'R' => hi
-    case head :: tail => head match
-      case 'F' | 'L' => split(tail, lo, Math.floor(lo + (hi - lo) / 2d).toInt)
-      case 'B' | 'R' => split(tail, Math.round(lo + (hi - lo) / 2d).toInt, hi)
+  case last :: Nil => last match
+    case 'F' | 'L' => lo
+    case 'B' | 'R' => hi
+  case head :: tail => head match
+    case 'F' | 'L' => split(tail, lo, Math.floor(lo + (hi - lo) / 2d).toInt)
+    case 'B' | 'R' => split(tail, Math.round(lo + (hi - lo) / 2d).toInt, hi)

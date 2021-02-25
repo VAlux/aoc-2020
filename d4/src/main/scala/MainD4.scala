@@ -14,10 +14,10 @@ def solve(input: List[String]): Int =
   
 @tailrec
 def splitInputToRawPassports(rows: List[String], passports: List[String] = List.empty): List[String] = 
-    if rows.isEmpty then passports.toList
-    else 
-      val current = rows.takeWhile(_.nonEmpty) 
-      splitInputToRawPassports(rows.drop(current.size + 1), passports :+ (current mkString " "))
+  if rows.isEmpty then passports.toList
+  else 
+    val current = rows.takeWhile(_.nonEmpty) 
+    splitInputToRawPassports(rows.drop(current.size + 1), passports :+ (current mkString " "))
 
 def parsePassportElements(rawPassport: String): List[PassportClaim] =
   rawPassport.split(" ").toList.flatMap { claimValue => 
