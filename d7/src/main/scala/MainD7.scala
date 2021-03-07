@@ -7,28 +7,32 @@ case class GraphVertex(val color: String, val adjacentEdges: Set[GraphEdge])
 def solve(input: List[String]) = 
   val lines = input
     .map(line => line.split("contain").toList)
-    .map(_.filter(_ == "bags").map(_.trim))
+    .map(_.map(_.replace("bags", "").replace("bag", "").replace(".", "").trim))
 
+  lines foreach println
   parse(lines.head, lines.tail)
 
-def parse(current: List[String], rem: List[List[String]], vertices: Set[GraphVertex] = Set.empty) = 
+def parse(current: List[String], rem: List[List[String]], vertices: Set[GraphVertex] = Set.empty): Set[GraphVertex] = 
   current match
+    case Nil => vertices
     case bag :: contents :: Nil => 
-      GraphVertex(bag.trim, parseEdges(contents.replace(".", "").split(",").toList, vertices))
+      val content = contents.replace(".", "").split(",").toList
+      val (edges, newVertices) = parseEdges(content.head, content.tail, vertices)
+      val newVertex = GraphVertex(bag.trim, edges)
+      parse(rem.head, rem.tail, vertices ++ newVertices + newVertex)
+    case _ => Set.empty
 
-  def parseEdges(bagContent: List[String], vertices: Set[GraphVertex]): Set[GraphEdge] = 
-    go(bagContent.head, bagContent.tail, vertices)
-
-  def go(current: String, rem: List[String], vertices: Set[GraphVertex], edges: Set[GraphEdge] = Set.empty): Set[GraphEdge] =
-    rem match 
-      case Nil => edges
-      case _ => current.partition(_.isDigit) match
-        case (amount, color) => 
-          vertices.find(_.color == color) match
-            case Some(existing) =>
-              val newEdge = GraphEdge(amount.toInt, existing)
-              go(rem.head, rem.tail, vertices, edges + newEdge)
-            case None =>
-              val newVertex = GraphVertex(color, Set.empty)
-              val newEdge = GraphEdge(amount.toInt, newVertex)
-              go(rem.head, rem.tail, vertices + newVertex, edges + newEdge)
+def parseEdges(current: String, rem: List[String], vertices: Set[GraphVertex], edges: Set[GraphEdge] = Set.empty): (Set[GraphEdge], Set[GraphVertex]) =
+  rem match 
+    case Nil => (edges, vertices)
+    case _ => current.partition(_.isDigit) match
+      case (amount, color) => 
+        vertices.find(_.color == color) match
+          case Some(existing) =>
+            val newEdge = GraphEdge(amount.toInt, existing)
+            parseEdges(rem.head, rem.tail, vertices, edges + newEdge)
+          case None =>
+            val newVertex = GraphVertex(color, Set.empty)
+            val newEdge = GraphEdge(amount.toInt, newVertex)
+            val newVertices = vertices + newVertex
+            parseEdges(rem.head, rem.tail, newVertices, edges + newEdge)
