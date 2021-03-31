@@ -1,38 +1,43 @@
-case class GraphEdge(val value: Int, val target: GraphVertex)
-case class GraphVertex(val color: String, val adjacentEdges: Set[GraphEdge])
+import scala.util.chaining._
+
+case class GraphEdge(val weight: Int, val data: String)
+
+type Graph = Map[String, Set[GraphEdge]]
 
 @main def entrypoint = 
   println(solve(FileLoader.readFile("input_test.txt")) mkString "\n")
 
+case class ContainerContents(amount: Int, color: String)
+case class ContainerDefinition(containerColor: String, contents: List[ContainerContents])
+
 def solve(input: List[String]) = 
-  val lines = input
+  input
     .map(line => line.split("contain").toList)
     .map(_.map(_.replace("bags", "").replace("bag", "").replace(".", "").trim))
+    .flatMap(parseContainerDefinitions)
+    .pipe(buildGraph)
 
-  parse(lines.head, lines.tail)
+def parseContainerDefinitions(definitions: List[String]): Option[ContainerDefinition] =
+  definitions match
+    case color :: contents :: Nil => Some(ContainerDefinition(color, parseContainerContents(contents)))
+    case _ => None
 
-def parse(current: List[String], rem: List[List[String]], vertices: Set[GraphVertex] = Set.empty): Set[GraphVertex] = 
-  rem match 
-    case Nil => vertices
-    case _ => current match
-      case bag :: contents :: Nil => 
-        val content = contents.replace(".", "").split(",").map(_.trim).toList
-        val (edges, newVertices) = parseEdges(content.head, content.tail, vertices)
-        val newVertex = GraphVertex(bag.trim, edges)
-        parse(rem.head, rem.tail, vertices ++ newVertices + newVertex)
-      case _ => vertices
-
-def parseEdges(current: String, rem: List[String], vertices: Set[GraphVertex], edges: Set[GraphEdge] = Set.empty): (Set[GraphEdge], Set[GraphVertex]) =
-  rem match 
-    case Nil => (edges, vertices)
-    case _ => current.partition(_.isDigit) match
+def parseContainerContents(contents: String): List[ContainerContents] =
+  contents.split(",").toList.flatMap { elem => 
+    elem.partition(_.isDigit) match 
       case (amount, color) => 
-        vertices.find(_.color == color) match
-          case Some(existing) =>
-            val newEdge = GraphEdge(amount.toInt, existing)
-            parseEdges(rem.head, rem.tail, vertices, edges + newEdge)
-          case None =>
-            val newVertex = GraphVertex(color, Set.empty)
-            val newEdge = GraphEdge(amount.toInt, newVertex)
-            val newVertices = vertices + newVertex
-            parseEdges(rem.head, rem.tail, newVertices, edges + newEdge)
+        if color != "no other" then Some(ContainerContents(amount.toInt, color.trim))
+        else None
+      case _ => None
+  }
+
+def buildGraph(definitions: List[ContainerDefinition]): Graph = 
+  def go(definition: ContainerDefinition, rem: List[ContainerDefinition], graph: Graph = Map.empty): Graph = 
+    rem match
+      case Nil => graph + generateEdges(definition)
+      case head :: tail => go(rem.head, rem.tail, graph + generateEdges(definition))
+  
+  go(definitions.head, definitions.tail)
+
+def generateEdges(definition: ContainerDefinition): (String, Set[GraphEdge]) = 
+  (definition.containerColor -> definition.contents.map(content => GraphEdge(content.amount, content.color)).toSet)
