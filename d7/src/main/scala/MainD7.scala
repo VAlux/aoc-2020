@@ -5,7 +5,9 @@ case class GraphEdge(val weight: Int, val data: String)
 type Graph = Map[String, List[GraphEdge]]
 
 @main def entrypoint = 
-  println(solve(FileLoader.readFile("input_test.txt"), "shiny gold") mkString "\n")
+  val tracedPath = solve(FileLoader.readFile("input.txt"), "shiny gold")
+  tracedPath.foreach(path => println(s"${path.map(_.data) mkString " -> "}\n\n"))
+  println(tracedPath.size)
 
 case class ContainerContents(amount: Int, color: String)
 case class ContainerDefinition(containerColor: String, contents: List[ContainerContents])
@@ -16,6 +18,7 @@ def solve(input: List[String], target: String) =
     .map(_.map(_.replace("bags", "").replace("bag", "").replace(".", "").trim))
     .flatMap(parseContainerDefinitions)
     .pipe(buildGraph)
+    // .tap(graph => println(s"${graph.map { case (value, edges) => "\"" + value + "\"" + s" -> ${edges.map(edge => "\"" + edge.data + "\"") mkString ","};\n" }}"))
     .pipe(graph => dfs(graph.removed(target), target))
 
 def parseContainerDefinitions(definitions: List[String]): Option[ContainerDefinition] =
@@ -43,8 +46,15 @@ def generateEdges(definition: ContainerDefinition): (String, List[GraphEdge]) =
   (definition.containerColor -> definition.contents.map(content => GraphEdge(content.amount, content.color)))
 
 def dfs(graph: Graph, targetData: String): List[List[GraphEdge]] = 
-  def trace(current: GraphEdge, path: List[GraphEdge] = List.empty): List[GraphEdge] = 
+  def trace(current: GraphEdge, path: List[GraphEdge]): List[GraphEdge] = 
     if current.data == targetData then path
-    else graph(current.data).filterNot(path.contains).flatMap(edge => trace(edge, path :+ current))
+    else graph
+      .get(current.data)
+      .getOrElse(List.empty)
+      .filterNot(path.contains)
+      .flatMap(edge => trace(edge, path :+ current))
 
-  graph.values.flatMap(edges => edges.map(edge => trace(edge))).toList.filterNot(_.isEmpty)
+  graph
+    .flatMap { case (value, edges) => edges.map(edge => trace(edge, List(GraphEdge(edge.weight, value)))) }
+    .toList
+    .filter(_.size > 1)
