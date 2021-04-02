@@ -1,12 +1,14 @@
 import scala.util.chaining._
+import scala.annotation.tailrec
 
 case class GraphEdge(val weight: Int, val data: String)
 
 type Graph = Map[String, List[GraphEdge]]
 
-@main def entrypoint = 
-  val tracedPaths = solve(FileLoader.readFile("input.txt"), "shiny gold").distinctBy(path => path(0).data)
-  tracedPaths.foreach(path => println(s"${path.map(_.data) mkString " -> "}\n\n"))
+@main def entrypoint =
+  val target = "shiny gold"
+  val tracedPaths = solve(FileLoader.readFile("input.txt"), target).distinctBy(path => path(0).data)
+  tracedPaths.foreach(path => println(showPath(path, target) + "\n\n"))
   println(tracedPaths.size)
 
 case class ContainerContents(amount: Int, color: String)
@@ -18,8 +20,13 @@ def solve(input: List[String], target: String) =
     .map(_.map(_.replace("bags", "").replace("bag", "").replace(".", "").trim))
     .flatMap(parseContainerDefinitions)
     .pipe(buildGraph)
-    // .tap(graph => println(s"${graph.map { case (value, edges) => "\"" + value + "\"" + s" -> ${edges.map(edge => "\"" + edge.data + "\"") mkString ","};\n" }}"))
     .pipe(graph => dfs(graph.removed(target), target))
+
+def showAsGraphVizNotation(graph: Graph): String =
+  s"${graph.map { case (value, edges) => "\"" + value + "\"" + s" -> ${edges.map(edge => "\"" + edge.data + "\"") mkString ","};\n" }}"
+
+def showPath(path: List[GraphEdge], target: String): String =
+ s"${path.map(_.data) mkString " -> "} -> $target"
 
 def parseContainerDefinitions(definitions: List[String]): Option[ContainerDefinition] =
   definitions match
@@ -35,6 +42,7 @@ def parseContainerContents(contents: String): List[ContainerContents] =
   }
 
 def buildGraph(definitions: List[ContainerDefinition]): Graph = 
+  @tailrec
   def go(definition: ContainerDefinition, rem: List[ContainerDefinition], graph: Graph = Map.empty): Graph = 
     rem match
       case Nil => graph + generateEdges(definition)
@@ -47,7 +55,7 @@ def generateEdges(definition: ContainerDefinition): (String, List[GraphEdge]) =
 
 def dfs(graph: Graph, targetData: String): List[List[GraphEdge]] = 
   def trace(current: GraphEdge, path: List[GraphEdge]): List[GraphEdge] = 
-    if current.data == targetData then path :+ current
+    if current.data == targetData then path
     else graph(current.data).filterNot(path.contains).flatMap(edge => trace(edge, path :+ current))
 
   graph
