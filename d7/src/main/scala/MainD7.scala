@@ -5,9 +5,9 @@ case class GraphEdge(val weight: Int, val data: String)
 type Graph = Map[String, List[GraphEdge]]
 
 @main def entrypoint = 
-  val tracedPath = solve(FileLoader.readFile("input.txt"), "shiny gold")
-  tracedPath.foreach(path => println(s"${path.map(_.data) mkString " -> "}\n\n"))
-  println(tracedPath.size)
+  val tracedPaths = solve(FileLoader.readFile("input.txt"), "shiny gold").distinctBy(path => path(0).data)
+  tracedPaths.foreach(path => println(s"${path.map(_.data) mkString " -> "}\n\n"))
+  println(tracedPaths.size)
 
 case class ContainerContents(amount: Int, color: String)
 case class ContainerDefinition(containerColor: String, contents: List[ContainerContents])
@@ -47,12 +47,8 @@ def generateEdges(definition: ContainerDefinition): (String, List[GraphEdge]) =
 
 def dfs(graph: Graph, targetData: String): List[List[GraphEdge]] = 
   def trace(current: GraphEdge, path: List[GraphEdge]): List[GraphEdge] = 
-    if current.data == targetData then path
-    else graph
-      .get(current.data)
-      .getOrElse(List.empty)
-      .filterNot(path.contains)
-      .flatMap(edge => trace(edge, path :+ current))
+    if current.data == targetData then path :+ current
+    else graph(current.data).filterNot(path.contains).flatMap(edge => trace(edge, path :+ current))
 
   graph
     .flatMap { case (value, edges) => edges.map(edge => trace(edge, List(GraphEdge(edge.weight, value)))) }
