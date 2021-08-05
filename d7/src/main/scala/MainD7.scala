@@ -17,7 +17,7 @@ type SEdge = GraphEdge[String]
   val sum = tracedPaths.foldLeft(0L)((acc, path) => acc + weightSum(path))
   println(sum)
 
-def solve(input: List[String], target: String) = 
+def solve(input: List[String], target: String) =
   input
     .map(line => line.split("contain").toList)
     .map(_.map(_.replace("bags", "").replace("bag", "").replace(".", "").trim))
@@ -29,57 +29,55 @@ def solve(input: List[String], target: String) =
 def parseContainerDefinitions(definitions: List[String]): Option[ContainerDefinition] =
   definitions match
     case color :: contents :: Nil => Some(ContainerDefinition(color, parseContainerContents(contents)))
-    case _ => None
+    case _                        => None
 
 def parseContainerContents(contents: String): List[ContainerContents] =
-  contents.split(",").toList.flatMap { elem => 
-    elem.partition(_.isDigit) match 
-      case (amount, color) => 
+  contents.split(",").toList.flatMap { elem =>
+    elem.partition(_.isDigit) match
+      case (amount, color) =>
         if color != "no other" then Some(ContainerContents(amount.toInt, color.trim))
         else None
   }
 
-def buildGraph(definitions: List[ContainerDefinition]): SGraph = 
+def buildGraph(definitions: List[ContainerDefinition]): SGraph =
   @tailrec
-  def go(definition: ContainerDefinition, rem: List[ContainerDefinition], graph: SGraph = Map.empty): SGraph = 
+  def go(definition: ContainerDefinition, rem: List[ContainerDefinition], graph: SGraph = Map.empty): SGraph =
     rem match
-      case Nil => graph + generateEdges(definition)
+      case Nil          => graph + generateEdges(definition)
       case head :: tail => go(rem.head, rem.tail, graph + generateEdges(definition))
-  
+
   go(definitions.head, definitions.tail)
 
-def generateEdges(definition: ContainerDefinition): (String, List[SEdge]) = 
+def generateEdges(definition: ContainerDefinition): (String, List[SEdge]) =
   (definition.containerColor -> definition.contents.map(content => GraphEdge(content.amount, content.color)))
 
-def dfs(graph: SGraph, targetData: String): List[List[SEdge]] = 
-  def search(current: SEdge, path: List[SEdge]): List[SEdge] = 
+def dfs(graph: SGraph, targetData: String): List[List[SEdge]] =
+  def search(current: SEdge, path: List[SEdge]): List[SEdge] =
     if current.data == targetData then path
     else graph(current.data).filterNot(path.contains).flatMap(edge => search(edge, path :+ current))
 
-  graph
-    .flatMap { case (value, edges) => edges.map(edge => search(edge, List(GraphEdge(edge.weight, value)))) }
-    .toList
+  graph.flatMap { case (value, edges) => edges.map(edge => search(edge, List(GraphEdge(edge.weight, value)))) }.toList
     .filter(_.size > 1)
 
-def traceAllContents(graph: SGraph, startFrom: String): List[List[SEdge]] = 
-  def trace(current: SEdge, path: List[SEdge]): List[SEdge] = 
-    graph.get(current.data) match 
-      case Some(edges: List[SEdge]) if !edges.isEmpty => 
+def traceAllContents(graph: SGraph, startFrom: String): List[List[SEdge]] =
+  def trace(current: SEdge, path: List[SEdge]): List[SEdge] =
+    graph.get(current.data) match
+      case Some(edges: List[SEdge]) if !edges.isEmpty =>
         edges.filterNot(path.contains).flatMap(edge => trace(edge, path :+ current))
-      case _ => 
+      case _ =>
         path :+ current
 
   graph(startFrom).map(edge => trace(edge, List(GraphEdge(1, startFrom)))).toList
 
 def showPathTo(path: List[SEdge], target: String): String =
- s"${path.map(_.data) mkString " -> "} -> $target"
+  s"${path.map(_.data) mkString " -> "} -> $target"
 
 def showPathFrom(path: List[SEdge]): String =
   (path.sliding(2, 1).map {
-    case (edge1 :: edge2 :: Nil) => edge1.data + s" --[${edge2.weight}]--> " 
-    case _ => "###"
+    case (edge1 :: edge2 :: Nil) => edge1.data + s" --[${edge2.weight}]--> "
+    case _                       => "###"
   } mkString "") + path.last.data
 
-def weightSum(path: List[SEdge]): Long = 
+def weightSum(path: List[SEdge]): Long =
   path.headOption
   path.sliding(2, 1).foldLeft(0)((a, b) => a + b.map(_.weight).reduce(_ * _))

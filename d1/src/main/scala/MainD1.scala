@@ -1,9 +1,9 @@
 import scala.annotation.tailrec
 
 @main def entrypoint: Unit =
-    println(run)
+  println(run)
 
-def run = 
+def run =
   val input = FileLoader.readFile("input.txt").map(_.toInt)
   // locate(input.head, input.tail)
   locateOpt(input.sorted, 0, input.size - 1)
@@ -11,8 +11,8 @@ def run =
 @tailrec
 def locateOpt(elems: List[Int], lo: Int, hi: Int): Int =
   val sum = elems(lo) + elems(hi)
-  if sum == 2020 then elems(lo) * elems(hi) 
-  else if sum < 2020 then locateOpt(elems, lo + 1, hi) 
+  if sum == 2020 then elems(lo) * elems(hi)
+  else if sum < 2020 then locateOpt(elems, lo + 1, hi)
   else locateOpt(elems, lo, hi - 1)
 
 def locateV1(elem: Int, rem: List[Int], target: Int = 2020): Int =
@@ -20,7 +20,9 @@ def locateV1(elem: Int, rem: List[Int], target: Int = 2020): Int =
 
 def locate(elem: Int, rem: List[Int], target: Int = 2020): Int = rem match
   case Nil => 0
-  case _ => rem
-    .filter(lo => lo + elem < target)
-    .flatMap(lo => rem.find(hi => hi + lo + elem == target).map(hi => hi * lo * elem))
-    .headOption.getOrElse(locate(rem.head, rem.tail))
+  case _ =>
+    rem
+      .filter(lo => lo + elem < target)
+      .flatMap(lo => rem.find(hi => hi + lo + elem == target).map(hi => hi * lo * elem))
+      .headOption
+      .getOrElse(locate(rem.head, rem.tail))
