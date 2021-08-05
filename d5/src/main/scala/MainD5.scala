@@ -21,3 +21,4 @@ def split(current: List[Char], lo: Int, hi: Int): Int = current match
   case head :: tail => head match
     case 'F' | 'L' => split(tail, lo, Math.floor(lo + (hi - lo) / 2d).toInt)
     case 'B' | 'R' => split(tail, Math.round(lo + (hi - lo) / 2d).toInt, hi)
+  case _ => 0
