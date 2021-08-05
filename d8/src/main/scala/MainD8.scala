@@ -29,6 +29,8 @@ def parseTermsList(input: List[String]): List[Action] =
       case _ => None
   }
 
+def fixBrokenInstruction(actions: List[Action]): State = ???
+
 def solve(input: List[String]): Int =
   run(parseTermsList(input)).counter
 
