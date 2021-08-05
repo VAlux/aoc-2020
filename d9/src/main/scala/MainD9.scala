@@ -11,16 +11,23 @@ def checkNumberIsValid(number: BigDecimal, preamble: List[BigDecimal]): Boolean 
 
   go(preamble.sorted, 0, preamble.size - 1)
 
-def decode(input: List[String], preambleSize: Int) =
-  input
-    .map(BigDecimal(_))
-    .sliding(preambleSize + 1)
-    .find(window => !checkNumberIsValid(window.last, window.init))
-    .map(_.last)
-    .getOrElse(BigDecimal(0))
+def locateWeakness(numbers: List[BigDecimal], preambleSize: Int): Option[BigDecimal] =
+  numbers.sliding(preambleSize + 1).find(window => !checkNumberIsValid(window.last, window.init)).map(_.last)
+
+def decode(weakNumber: BigDecimal, numbers: List[BigDecimal]): BigDecimal =
+  @tailrec
+  def go(elems: List[BigDecimal], index: Int, amount: Int): BigDecimal =
+    val sum = elems.sum
+    if sum == weakNumber then elems.max + elems.min
+    else if sum < weakNumber then go(numbers.slice(index, index + amount + 1), index, amount + 1)
+    else go(numbers.slice(index + 1, index + 3), index + 1, 2)
+
+  go(numbers.slice(0, 2), 0, 2)
 
 def solve(input: List[String]): BigDecimal =
-  decode(input, 25)
+  locateWeakness(input.map(BigDecimal(_)), 25)
+    .map(weak => decode(weak, input.map(BigDecimal(_))))
+    .getOrElse(BigDecimal(-1))
 
 @main def entrypoint =
   println(solve(FileLoader.readFile("input.txt")))
