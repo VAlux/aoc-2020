@@ -1,4 +1,5 @@
 import scala.annotation.tailrec
+import scala.util.chaining.*
 
 def checkNumberIsValid(number: BigDecimal, preamble: List[BigDecimal]): Boolean =
   @tailrec
@@ -25,9 +26,9 @@ def decode(weakNumber: BigDecimal, numbers: List[BigDecimal]): BigDecimal =
   go(numbers.slice(0, 2), 0, 2)
 
 def solve(input: List[String]): BigDecimal =
-  locateWeakness(input.map(BigDecimal(_)), 25)
-    .map(weak => decode(weak, input.map(BigDecimal(_))))
-    .getOrElse(BigDecimal(-1))
+  input
+    .map(BigDecimal(_))
+    .pipe(numbers => locateWeakness(numbers, 25).map(weak => decode(weak, numbers)).getOrElse(BigDecimal(-1)))
 
 @main def entrypoint =
   println(solve(FileLoader.readFile("input.txt")))
