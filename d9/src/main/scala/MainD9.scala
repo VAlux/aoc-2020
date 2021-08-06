@@ -26,9 +26,10 @@ def decode(weakNumber: BigDecimal, numbers: List[BigDecimal]): BigDecimal =
   go(numbers.slice(0, 2), 0, 2)
 
 def solve(input: List[String]): BigDecimal =
-  input
-    .map(BigDecimal(_))
-    .pipe(numbers => locateWeakness(numbers, 25).map(weak => decode(weak, numbers)).getOrElse(BigDecimal(-1)))
+  def locateAndDecode(numbers: List[BigDecimal], preambleSize: Int) =
+    locateWeakness(numbers, preambleSize).map(weak => decode(weak, numbers))
+
+  input.map(BigDecimal(_)).pipe(numbers => locateAndDecode(numbers, 25).getOrElse(BigDecimal(-1)))
 
 @main def entrypoint =
   println(solve(FileLoader.readFile("input.txt")))
